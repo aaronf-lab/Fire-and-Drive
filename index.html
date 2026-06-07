@@ -250,7 +250,7 @@
   if(skip) skip.addEventListener('click', hideOverlay);
   if(replay) replay.addEventListener('click', function(){ showOverlay(); resetCaption(); if(gate)gate.style.display='none'; startIntro(); });
   loadAPI();
-  try{ if(!localStorage.getItem('fd_intro_seen')){ showOverlay(); } }catch(e){ showOverlay(); }
+  showOverlay();
 })();
 </script>
 </body>
