@@ -136,6 +136,7 @@
 <div class="introOverlay" id="introOverlay" style="display:none">
   <div class="introStage"><div id="introPlayer"></div></div>
   <div id="introMusic" aria-hidden="true" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none"></div>
+  <audio id="introVO" src="voiceover.mp3" preload="auto" playsinline></audio>
   <div class="introBlack" id="introBlack"></div>
   <div class="capStage" id="capStage">
     <div class="capWm"><img src="pcn-logo.png?v=2" alt=""></div>
@@ -211,15 +212,15 @@
   var introStage=document.querySelector('.introStage');
   var player=null, playerReady=false, wantPlay=false, capTimers=[], pollTimer=null;
   var music=null, musicReady=false, musicFade=null;
-  var MUSIC_ID='jG0kCHhriNU', MUSIC_START=215, MUSIC_VOL=65, MUSIC_FADE_IN=5000, MUSIC_FADE_OUT=2500;
+  var MUSIC_ID='jG0kCHhriNU', MUSIC_START=215, MUSIC_VOL=35, MUSIC_FADE_IN=5000, MUSIC_FADE_OUT=2500;
   var blackEl=document.getElementById('introBlack');
   var VIDEO='KpYY4bxewqU';
   function showOverlay(){ overlay.style.display='flex'; void overlay.offsetWidth; overlay.classList.remove('hide'); }
   function clearCap(){ capTimers.forEach(clearTimeout); capTimers=[]; }
   function startPoll(){ if(pollTimer)return; pollTimer=setInterval(function(){ try{ var d=player.getDuration(), c=player.getCurrentTime(); if(d>0 && (d-c)<=3){ if(blackEl) blackEl.classList.add('on'); stopPoll(); } }catch(e){} }, 250); }
   function stopPoll(){ if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
-  function resetCaption(){ clearCap(); stopPoll(); stopMusic(); if(blackEl) blackEl.classList.remove('on'); capStage.classList.remove('show','lit'); capStage.querySelectorAll('.capLine').forEach(function(l){l.classList.remove('in','out');}); var bar=document.getElementById('capBar'); if(bar){bar.style.transition='none'; bar.style.width='0';} var em=document.getElementById('capEmber'); if(em){em.style.animation='none'; void em.offsetWidth; em.style.animation='';} if(introStage){introStage.style.opacity='';} }
-  function hideOverlay(){ clearCap(); stopPoll(); overlay.classList.add('hide'); try{localStorage.setItem('fd_intro_seen','1');}catch(e){} setTimeout(function(){overlay.style.display='none'; resetCaption();},650); if(player&&player.pauseVideo){try{player.pauseVideo();}catch(e){}} stopMusic(); }
+  function resetCaption(){ clearCap(); stopPoll(); stopMusic(); var vo=document.getElementById('introVO'); if(vo){try{vo.pause();vo.currentTime=0;}catch(e){}} if(blackEl) blackEl.classList.remove('on'); capStage.classList.remove('show','lit'); capStage.querySelectorAll('.capLine').forEach(function(l){l.classList.remove('in','out');}); var bar=document.getElementById('capBar'); if(bar){bar.style.transition='none'; bar.style.width='0';} var em=document.getElementById('capEmber'); if(em){em.style.animation='none'; void em.offsetWidth; em.style.animation='';} if(introStage){introStage.style.opacity='';} }
+  function hideOverlay(){ clearCap(); stopPoll(); overlay.classList.add('hide'); try{localStorage.setItem('fd_intro_seen','1');}catch(e){} setTimeout(function(){overlay.style.display='none'; resetCaption();},650); if(player&&player.pauseVideo){try{player.pauseVideo();}catch(e){}} stopMusic(); var vo=document.getElementById('introVO'); if(vo){try{vo.pause();vo.currentTime=0;}catch(e){}} }
   function doPlay(p){ try{p.unMute();p.setVolume(100);p.seekTo(0);p.playVideo();}catch(e){} }
   function fadeMusic(from,to,ms){ if(!music||!musicReady)return; if(musicFade)clearInterval(musicFade); var steps=Math.max(1,Math.round(ms/40)),i=0; try{music.setVolume(from);}catch(e){} musicFade=setInterval(function(){ i++; var v=from+(to-from)*(i/steps); try{music.setVolume(Math.round(v));}catch(e){} if(i>=steps){clearInterval(musicFade);musicFade=null;} },40); }
   function playMusic(){ if(!music||!musicReady)return; try{ music.seekTo(MUSIC_START,true); music.unMute(); music.setVolume(0); music.playVideo(); }catch(e){} fadeMusic(0,MUSIC_VOL,MUSIC_FADE_IN); }
@@ -231,21 +232,22 @@
     capStage.classList.add('show'); void capStage.offsetWidth; capStage.classList.add('lit');
     if(introStage) introStage.style.opacity='0';
     playMusic();
+    var vo=document.getElementById('introVO'); if(vo){ try{ vo.currentTime=0; vo.volume=1; vo.play(); }catch(e){} vo.addEventListener('ended', function(){ hideOverlay(); }, {once:true}); }
     var lines=capStage.querySelectorAll('.capLine');
     var sched=[{i:0,in:600,out:4800},{i:1,in:5600,out:9200},{i:2,in:10000,out:13400},{i:3,in:14200,out:20000},{i:4,in:20800,out:25000},{i:5,in:25800,out:null}];
     sched.forEach(function(s){
       capTimers.push(setTimeout(function(){ lines[s.i].classList.remove('out'); lines[s.i].classList.add('in'); }, s.in));
       if(s.out!=null) capTimers.push(setTimeout(function(){ lines[s.i].classList.remove('in'); lines[s.i].classList.add('out'); }, s.out));
     });
-    var bar=document.getElementById('capBar'); if(bar){ requestAnimationFrame(function(){ bar.style.transition='width 30s linear'; bar.style.width='100%'; }); }
-    capTimers.push(setTimeout(function(){ fadeMusic(MUSIC_VOL,0,MUSIC_FADE_OUT); }, 30400-MUSIC_FADE_OUT));
-    capTimers.push(setTimeout(hideOverlay, 30400));
+    var bar=document.getElementById('capBar'); if(bar){ requestAnimationFrame(function(){ bar.style.transition='width 37s linear'; bar.style.width='100%'; }); }
+    capTimers.push(setTimeout(function(){ fadeMusic(MUSIC_VOL,0,MUSIC_FADE_OUT); }, 37000-MUSIC_FADE_OUT));
+    capTimers.push(setTimeout(hideOverlay, 37000));
   }
   window.onYouTubeIframeAPIReady=function(){ makePlayer(); makeMusic(); };
   function loadAPI(){ if(window.YT&&window.YT.Player){makePlayer();makeMusic();return;} if(document.getElementById('ytapi'))return; var s=document.createElement('script'); s.id='ytapi'; s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s); }
   function makePlayer(){ if(player)return; player=new YT.Player('introPlayer',{videoId:VIDEO,playerVars:{autoplay:0,playsinline:1,controls:0,rel:0,modestbranding:1,fs:0,disablekb:1,iv_load_policy:3},events:{ onReady:function(e){ playerReady=true; if(wantPlay) doPlay(e.target); }, onStateChange:function(e){ if(e.data===YT.PlayerState.PLAYING){ startPoll(); } if(e.data===YT.PlayerState.ENDED){ runCaption(); } }, onError:function(){ runCaption(); } }}); }
   function makeMusic(){ if(music)return; if(!(window.YT&&window.YT.Player))return; music=new YT.Player('introMusic',{videoId:MUSIC_ID,playerVars:{autoplay:0,playsinline:1,controls:0,rel:0,modestbranding:1,fs:0,disablekb:1,iv_load_policy:3},events:{ onReady:function(){ musicReady=true; }, onError:function(){ musicReady=false; } }}); }
-  function startIntro(){ if(gate)gate.style.display='none'; if(playerReady&&player){ doPlay(player); } else { wantPlay=true; } }
+  function startIntro(){ if(gate)gate.style.display='none'; var vo=document.getElementById('introVO'); if(vo){ try{ var pp=vo.play(); if(pp&&pp.then){ pp.then(function(){vo.pause();vo.currentTime=0;}).catch(function(){}); } else { vo.pause(); vo.currentTime=0; } }catch(e){} } if(playerReady&&player){ doPlay(player); } else { wantPlay=true; } }
   if(begin) begin.addEventListener('click', startIntro);
   if(skip) skip.addEventListener('click', hideOverlay);
   if(replay) replay.addEventListener('click', function(){ showOverlay(); resetCaption(); if(gate)gate.style.display='none'; startIntro(); });
